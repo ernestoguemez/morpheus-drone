@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Morpheus</title>
+<meta name="description" content="Morpheus is a 5-inch FPV quadcopter designed, built and flown by Ernesto Guemez. Build log, five debugged failures, and the plan for autonomous flight.">
+<meta property="og:title" content="Morpheus">
+<meta property="og:description" content="A self-built FPV quadcopter: build log, debugging record, and the plan for autonomous flight.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --ink: #0d1722;
+  --ink-2: #4b5a6b;
+  --paper: #f4f6f9;
+  --white: #ffffff;
+  --band: #e8edf3;
+  --rule: #cbd3dd;
+  --orange: #ff6a2b;
+  --orange-text: #c2410c;
+  --orange-deep: #9a3412;
+  --tint: #fce8dd;
+  --green: #17794a;
+  --on-ink: #e8edf3;
+  --on-ink-muted: #9fb0c3;
+  --on-ink-rule: #2a3a4d;
+  --panel-ink: #121f2e;
+  --sans: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --wide: "Unbounded", "Instrument Sans", sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; font-family: var(--sans); font-size: 17px; line-height: 1.65; color: var(--ink); background: var(--paper); }
+h1, h2, h3, h4, p { margin: 0; }
+a { color: var(--orange-text); text-underline-offset: 3px; }
+a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+img { max-width: 100%; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 24px; }
+.label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--orange-text); }
+.mono-label { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.section { padding-block: 96px; }
+.section-head { display: flex; flex-direction: column; gap: 12px; max-width: 760px; margin-bottom: 44px; }
+.section-head h2 { font-size: clamp(32px, 4.6vw, 52px); line-height: 1.08; font-weight: 700; letter-spacing: -0.02em; text-wrap: balance; }
+.section-head p { color: var(--ink-2); }
+
+/* nav */
+.nav { background: var(--ink); border-bottom: 1px solid var(--on-ink-rule); }
+.nav .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 28px; padding-block: 16px; }
+.brand { font-family: var(--wide); font-weight: 800; font-size: 15px; letter-spacing: 0.04em; color: var(--orange); text-decoration: none; }
+.nav-links { display: flex; flex-wrap: wrap; gap: 6px 24px; }
+.nav-links a { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #c9d4e0; text-decoration: none; }
+.nav-links a:hover { color: var(--orange); }
+
+/* hero */
+.hero { background: var(--ink); color: var(--on-ink); }
+.hero .wrap { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 56px 48px; padding-block: 88px 96px; }
+.hero-main { flex: 1 1 520px; min-width: 0; display: flex; flex-direction: column; gap: 28px; }
+.hero .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--on-ink-muted); }
+.wordmark { font-family: var(--wide); font-weight: 800; font-size: clamp(44px, 10.5vw, 140px); line-height: 0.95; letter-spacing: -0.02em; color: var(--orange); }
+.hero .tagline { font-size: clamp(24px, 3.4vw, 38px); line-height: 1.2; font-weight: 600; max-width: 20ch; color: #fff; text-wrap: balance; }
+.hero .lede { font-size: 18px; max-width: 56ch; color: #b7c4d3; }
+.chips { display: flex; flex-wrap: wrap; gap: 12px; }
+.chip { padding: 8px 14px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid; }
+.chip.done { color: #6fd3a4; border-color: #2f7a5b; }
+.chip.now { color: #ff8a57; border-color: var(--orange); }
+.chip.next { color: var(--on-ink-muted); border: 1px dashed #6b7d91; }
+.readout { flex: 0 1 340px; width: 100%; min-width: 0; background: var(--panel-ink); border: 1px solid var(--on-ink-rule); padding: 20px 22px; font-family: var(--mono); font-size: 13px; }
+.readout h2 { font-size: 11px; font-weight: 400; letter-spacing: 0.14em; text-transform: uppercase; color: #ff8a57; padding-bottom: 12px; border-bottom: 1px solid var(--on-ink-rule); }
+.readout dl { margin: 0; }
+.readout .row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; padding: 10px 0; border-bottom: 1px solid #1d2c3e; }
+.readout .row:last-child { border-bottom: 0; padding-bottom: 0; }
+.readout dt { color: var(--on-ink-muted); }
+.readout dd { margin: 0; color: var(--on-ink); }
+.readout dd.ok { color: #6fd3a4; }
+
+/* media slots: image on top, label shows if the file is missing */
+.slot { position: relative; margin: 0; aspect-ratio: 4 / 3; max-width: 100%; border: 1.5px dashed #8696a8; background: var(--paper); display: flex; align-items: center; justify-content: center; text-align: center; padding: 20px; color: var(--ink-2); font-family: var(--mono); font-size: 13px; overflow: hidden; }
+.slot.wide { aspect-ratio: 16 / 9; }
+.slot.short { aspect-ratio: 16 / 10; }
+.slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slot:has(img) { border-color: transparent; }
+
+/* first flight */
+.flight { background: var(--paper); }
+.flight-grid { display: flex; flex-wrap: wrap; gap: 36px 48px; align-items: center; }
+.video { flex: 1 1 520px; min-width: 0; aspect-ratio: 16 / 9; background: var(--ink); color: var(--on-ink-muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px; font-family: var(--mono); font-size: 13px; }
+.video iframe { width: 100%; height: 100%; border: 0; }
+.video.has-embed { padding: 0; display: block; }
+.flight-text { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+.flight-text h3 { font-size: 26px; line-height: 1.2; font-weight: 700; }
+.flight-text p { color: var(--ink-2); }
+.flight-text .caption { font-family: var(--mono); font-size: 13px; color: var(--ink); }
+
+/* why */
+.why { background: var(--white); }
+.why-grid { display: flex; flex-wrap: wrap; gap: 48px 64px; }
+.prose { flex: 1 1 440px; min-width: 0; max-width: 640px; display: flex; flex-direction: column; gap: 18px; }
+.arc { flex: 1 1 300px; min-width: 0; margin: 0; padding: 0; list-style: none; border-left: 2px solid var(--rule); }
+.arc li { padding: 0 0 26px 22px; display: flex; flex-direction: column; gap: 2px; }
+.arc li:last-child { padding-bottom: 0; }
+.arc .state { font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.arc .state.done { color: var(--green); }
+.arc .state.now { color: var(--orange-text); }
+.arc .state.next { color: var(--ink-2); }
+.arc h3 { font-size: 20px; font-weight: 600; }
+.arc p { color: var(--ink-2); font-size: 15px; }
+
+/* build */
+.build { background: var(--band); }
+.steps { display: flex; flex-direction: column; gap: 56px; }
+.step { display: flex; flex-wrap: wrap; gap: 28px 48px; align-items: center; }
+.step.flip { flex-direction: row-reverse; flex-wrap: wrap-reverse; }
+.step-text { flex: 1 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.step-text h3 { font-size: 28px; line-height: 1.15; font-weight: 700; }
+.step-text p { color: var(--ink-2); }
+.step .slot { flex: 1 1 380px; min-width: 0; }
+.footnote { margin-top: 56px; padding-top: 20px; border-top: 1px solid #b8c3d0; font-size: 15px; color: var(--ink-2); max-width: 70ch; }
+
+/* log */
+.log { background: var(--white); }
+.entries { display: flex; flex-direction: column; gap: 48px; }
+.entry { border-top: 2px solid var(--ink); padding-top: 28px; display: flex; flex-wrap: wrap; gap: 28px 48px; }
+.entry-side { flex: 0 1 340px; min-width: 0; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+.tag { align-self: flex-start; border: 1.5px solid var(--ink); padding: 4px 10px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.entry-side h3 { font-size: 30px; line-height: 1.1; font-weight: 700; letter-spacing: -0.01em; }
+.entry-body { flex: 1 1 420px; min-width: 0; margin: 0; display: flex; flex-direction: column; }
+.entry-body .row { display: flex; flex-wrap: wrap; gap: 6px 24px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+.entry-body dt { flex: 0 0 110px; font-family: var(--mono); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-2); padding-top: 3px; }
+.entry-body dd { flex: 1 1 260px; min-width: 0; margin: 0; }
+.entry-body dd p + p { margin-top: 10px; }
+.entry-body .lesson { background: var(--tint); margin-top: 14px; padding: 16px 14px; border-bottom: 0; }
+.entry-body .lesson dt { color: var(--orange-deep); }
+.entry-body .lesson dd { font-weight: 600; }
+.code { display: block; margin-top: 10px; background: var(--ink); color: var(--on-ink); padding: 12px 14px; font-family: var(--mono); font-size: 13px; overflow-x: auto; max-width: 100%; }
+code { font-family: var(--mono); font-size: 0.9em; }
+.minor { margin-top: 56px; display: flex; flex-wrap: wrap; gap: 20px 40px; }
+.minor > div { flex: 1 1 300px; min-width: 0; border-top: 1px solid var(--rule); padding-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+.minor h4 { font-size: 19px; font-weight: 600; }
+.minor p { font-size: 15px; color: var(--ink-2); }
+
+/* specs */
+.specs { background: var(--ink); color: var(--on-ink); }
+.specs .section-head h2 { color: #fff; }
+.specs .section-head p { color: #b7c4d3; }
+.specs .label { color: #ff8a57; }
+.chain-block { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.chain-title { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+.chain-title.built { color: #6fd3a4; }
+.chain-title.planned { color: var(--on-ink-muted); }
+.chain { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.node { flex: 1 1 150px; min-width: 0; border: 1.5px solid var(--on-ink); background: var(--panel-ink); padding: 14px; display: flex; flex-direction: column; gap: 2px; }
+.node b { font-weight: 600; font-size: 16px; line-height: 1.25; }
+.node span { font-family: var(--mono); font-size: 12px; color: var(--on-ink-muted); }
+.node.planned { flex-basis: 220px; border: 1.5px dashed #6b7d91; background: transparent; }
+.arrow { align-self: center; font-family: var(--mono); font-size: 13px; color: #ff8a57; }
+.table-wrap { overflow-x: auto; max-width: 100%; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 520px; font-size: 15px; }
+th { text-align: left; padding: 10px 0; font-family: var(--mono); font-size: 12px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--on-ink-muted); border-bottom: 1.5px solid var(--on-ink); }
+td { padding: 11px 24px 11px 0; border-bottom: 1px solid var(--on-ink-rule); vertical-align: top; }
+td:first-child { width: 220px; font-family: var(--mono); font-size: 13px; color: var(--on-ink-muted); white-space: nowrap; }
+
+/* next */
+.next { background: var(--paper); }
+.cards { display: flex; flex-wrap: wrap; gap: 16px; }
+.card { flex: 1 1 240px; min-width: 0; padding: 22px; display: flex; flex-direction: column; gap: 8px; border: 1.5px dashed var(--ink-2); }
+.card.now { border: 1.5px solid var(--ink); background: var(--white); }
+.card h3 { font-size: 21px; font-weight: 700; }
+.card p { font-size: 15px; color: var(--ink-2); }
+.card .mono-label.hot { color: var(--orange-text); }
+.callout { margin-top: 24px; background: var(--tint); padding: 18px 22px; max-width: 760px; }
+
+/* footer */
+.footer { background: var(--ink); color: var(--on-ink); }
+.footer .wrap { padding-block: 64px 72px; display: flex; flex-wrap: wrap; gap: 36px 56px; justify-content: space-between; }
+.footer .about { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer .big { font-family: var(--wide); font-weight: 800; font-size: 28px; letter-spacing: 0.02em; color: var(--orange); }
+.footer .about p { color: #b7c4d3; }
+.footer .col { flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 6px; font-family: var(--mono); font-size: 13px; overflow-wrap: anywhere; }
+.footer .col .mono-label { color: var(--on-ink-muted); font-size: 12px; }
+.footer a { color: #ff8a57; }
+.footer .ai-note { flex: 1 1 100%; border-top: 1px solid rgba(255,255,255,0.14); padding-top: 22px; font-size: 14px; line-height: 1.55; color: #b7c4d3; max-width: 78ch; }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">MORPHEUS</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#first-flight">Flight</a>
+      <a href="#why">Why</a>
+      <a href="#build">Build</a>
+      <a href="#log">Engineering log</a>
+      <a href="#specs">Specs</a>
+      <a href="#next">Next</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-main">
+      <div class="eyebrow">Custom FPV Quadcopter. Designed and built by me, Ernesto Guemez.</div>
+      <h1 class="wordmark">MORPHEUS</h1>
+      <p class="tagline">I put this drone together from scratch, debugged all the issues, and finally got it in the air.</p>
+      <p class="lede">This is a 5-inch carbon fiber quadcopter weighing about 650g. I'm flying it manually right now, but making it fly autonomously is definitely the next goal. This page is a record of my build process, what went wrong, and how I figured things out.</p>
+      <div class="chips">
+        <div class="chip done">Phase 1 · Build · done</div>
+        <div class="chip now">Phase 2 · Manual flight · in progress</div>
+        <div class="chip next">Phase 3 · Autonomy · planned</div>
+      </div>
+    </div>
+    <aside class="readout" aria-label="Aircraft readout">
+      <h2>Aircraft readout</h2>
+      <dl>
+        <div class="row"><dt>FRAME</dt><dd>Mark4 5″ carbon</dd></div>
+        <div class="row"><dt>MOTORS</dt><dd>2207 2400KV × 4</dd></div>
+        <div class="row"><dt>POWER</dt><dd>4S LiPo 1300 mAh</dd></div>
+        <div class="row"><dt>FLIGHT CTRL</dt><dd>SpeedyBee F405 V5</dd></div>
+        <div class="row"><dt>FIRMWARE</dt><dd>Betaflight 2026.6.1</dd></div>
+        <div class="row"><dt>WEIGHT</dt><dd>~650 g</dd></div>
+        <div class="row"><dt>CONTROL</dt><dd class="ok">Manual, by hand</dd></div>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<section class="section flight" id="first-flight">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">First flight</div>
+      <h2>Morpheus flies.</h2>
+    </div>
+    <div class="flight-grid">
+      <!-- To embed the video: set FIRST_FLIGHT_ID in the script at the bottom of this file. -->
+      <div class="video" id="first-flight-video">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" stroke="#ff6a2b" stroke-width="2.5" aria-hidden="true"><circle cx="32" cy="32" r="28"/><path d="M26 20 L46 32 L26 44 Z"/></svg>
+        <div>[VIDEO: first hover clip]</div>
+      </div>
+      <div class="flight-text">
+        <h3>First hover</h3>
+        <p>This clip shows my first successful hover test. Before this, I had a frustrating attempt where the motors spun out and nothing lifted. I wrote about that whole saga in the engineering log.</p>
+        <p class="caption">First hover test, drifting just a little bit with the wind.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section why" id="why">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">Why I built it</div>
+      <h2>I really wanted to understand every single piece of this system.</h2>
+    </div>
+    <div class="why-grid">
+      <div class="prose">
+        <p>I want to study aerospace engineering, and I realized a drone is a complete aircraft system in miniature. I wanted to build one so I couldn't treat any of its systems like a black box.</p>
+        <p>I had never touched a soldering iron before this. I started completely from zero and picked up the skills as the build demanded them.</p>
+        <p>The dream is to have a drone that takes off, flies a GPS route, and lands on its own using Python on a Raspberry Pi. We're not there yet, though—right now I'm flying Morpheus manually and working on the tuning.</p>
+        <p>I named it Morpheus because I liked the idea of giving form to a bunch of loose parts. Plus, the whole autonomous flight part is still a dream for now.</p>
+      </div>
+      <ol class="arc">
+        <li><span class="state done">Done</span><h3>Phase 1 · Build</h3><p>Frame, motors, soldering, electronics, configuration.</p></li>
+        <li><span class="state now">In progress</span><h3>Phase 2 · Manual flight</h3><p>First flights, then tuning: drift, oscillations, PID.</p></li>
+        <li><span class="state next">Planned</span><h3>Phase 3 · Autonomy</h3><p>GPS, telemetry and a Raspberry Pi running MAVLink missions.</p></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="section build" id="build">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">The build</div>
+      <h2>Turning a box of loose parts into a flight controller that actually listens to my radio.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-text">
+          <div class="mono-label">Frame and motors</div>
+          <h3>Structure first</h3>
+          <p>I started with a Mark4 5-inch carbon frame and four EMAX ECO II 2207 2400KV motors on 16x16 mm mounts. This is exactly where I realized my first batch of motors was the wrong size—more on that in the log.</p>
+        </div>
+        <figure class="slot"><span>[PHOTO: frame with motors mounted]</span><img src="assets/photos/frame.jpg" alt="Carbon fiber frame with four motors mounted" loading="lazy" onerror="this.remove()"></figure>
+      </div>
+      <div class="step flip">
+        <div class="step-text">
+          <div class="mono-label">Soldering</div>
+          <h3>Twelve motor wires, one capacitor, one battery lead</h3>
+          <p>I ended up soldering the motor wires and a capacitor to the ESC, the XT60 lead to the power pads, and the receiver to UART6. You have to be super careful since reversing power will instantly fry your parts, so I double-checked every single joint.</p>
+        </div>
+        <figure class="slot"><span>[MACRO PHOTO: finished solder joints on the ESC]</span><img src="assets/photos/solder.jpg" alt="Close-up of finished solder joints on the ESC" loading="lazy" onerror="this.remove()"></figure>
+      </div>
+      <div class="step">
+        <div class="step-text">
+          <div class="mono-label">Electronics stack</div>
+          <h3>Stack, insulate, test for shorts</h3>
+          <p>The SpeedyBee F405 flight controller sits right on top of the ESC. Since carbon fiber conducts electricity, I had to insulate the receiver under a plastic cover. Before plugging in the LiPo, I ran a bulb test and checked for continuity just to be safe.</p>
+        </div>
+        <figure class="slot"><span>[PHOTO: assembled stack with receiver]</span><img src="assets/photos/stack.jpg" alt="Assembled flight controller and ESC stack with receiver" loading="lazy" onerror="this.remove()"></figure>
+      </div>
+      <div class="step flip">
+        <div class="step-text">
+          <div class="mono-label">Configuration</div>
+          <h3>Betaflight, checked against measurements</h3>
+          <p>It's running Betaflight 2026.6.1 with DSHOT600 and a 4S profile. I tuned the voltage scale until Betaflight read 15.2 V against 15.3 V on my multimeter, and two of the motors were spinning backward, but I fixed that in the software (I reversed M1 and M4) so I wouldn't have to resolder anything.</p>
+        </div>
+        <figure class="slot"><span>[SCREENSHOT: Betaflight motor direction screen]</span><img src="assets/photos/config.jpg" alt="Betaflight motor direction screen" loading="lazy" onerror="this.remove()"></figure>
+      </div>
+    </div>
+    <p class="footnote">I completely skipped the landing legs at first because the provided screws were too short. They're optional anyway, so the drone just landed on its battery strap. I eventually figured out a way to attach them though.</p>
+  </div>
+</section>
+
+<section class="section log" id="log">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">Engineering log</div>
+      <h2>Five things that went wrong and how I actually figured them out.</h2>
+      <p>I chose to highlight these five because they all required a totally different way of thinking. Fixing them was usually quick, but the diagnosis is the part I really found interesting.</p>
+    </div>
+
+    <div class="entries">
+
+      <article class="entry">
+        <div class="entry-side">
+          <div class="tag">Sourcing diligence</div>
+          <h3>The wrong motors</h3>
+          <figure class="slot short"><span>[PHOTO: the wrong motors]</span><img src="assets/photos/log1_motors.jpg" alt="The 2006 motors that arrived instead of 2207" loading="lazy" onerror="this.remove()"></figure>
+        </div>
+        <dl class="entry-body">
+          <div class="row"><dt>Symptom</dt><dd>The motors showed up, but they were size 2006 instead of the 2207s I needed.</dd></div>
+          <div class="row"><dt>Diagnosis</dt><dd>I noticed it right in the middle of assembly when the specs didn't match what I had planned.</dd></div>
+          <div class="row"><dt>Root cause</dt><dd>I trusted the title on AliExpress instead of checking the specific variant I was clicking on.</dd></div>
+          <div class="row"><dt>Fix</dt><dd>I opened a dispute, ordered the right 2207 motors, and waited for them to arrive.</dd></div>
+          <div class="row lesson"><dt>Lesson</dt><dd>The title is marketing; the variant you select is what you're actually buying.</dd></div>
+        </dl>
+      </article>
+
+      <article class="entry">
+        <div class="entry-side">
+          <div class="tag">Systems thinking</div>
+          <h3>A radio that could not speak to the receiver</h3>
+          <figure class="slot short"><span>[PHOTO: radio menu, Internal RF options]</span><img src="assets/photos/log2_menu.jpg" alt="Radio menu showing Internal RF options OFF and MULTI" loading="lazy" onerror="this.remove()"></figure>
+          <figure class="slot short"><span>[PHOTO: module stuck on "Loading"]</span><img src="assets/photos/log2_module.jpg" alt="ELRS module screen stuck on Loading" loading="lazy" onerror="this.remove()"></figure>
+        </div>
+        <dl class="entry-body">
+          <div class="row"><dt>Symptom</dt><dd>My RadioMaster Pocket didn't have an ELRS option, but my receiver only speaks ELRS.</dd></div>
+          <div class="row"><dt>Diagnosis</dt><dd>I checked the box again and realized ELRS was a product option, and I had accidentally bought the CC2500 version.</dd></div>
+          <div class="row"><dt>Root cause</dt><dd>Since they run on completely different radio chips, no firmware update was ever going to bridge them.</dd></div>
+          <div class="row"><dt>Fix</dt><dd>
+            <p>I fixed it by snapping a Jumper Aion ELRS module into the external bay and switching the settings to CRSF.</p>
+            <p>But then the new module got stuck on "Loading". Turns out I needed to reseat the module properly on its data pins.</p>
+          </dd></div>
+          <div class="row lesson"><dt>Lesson</dt><dd>Always check the actual chips your hardware uses, since menus and packaging can be misleading.</dd></div>
+        </dl>
+      </article>
+
+      <article class="entry">
+        <div class="entry-side">
+          <div class="tag">Methodical debugging</div>
+          <h3>The drone that would not arm</h3>
+          <figure class="slot short"><span>[SCREENSHOT: CLI status output]</span><img src="assets/photos/log3_cli.jpg" alt="Betaflight CLI status output showing arming flags" loading="lazy" onerror="this.remove()"></figure>
+          <figure class="slot short"><span>[SCREENSHOT: Modes tab, ARM range]</span><img src="assets/photos/log3_modes.jpg" alt="Betaflight Modes tab with the ARM range" loading="lazy" onerror="this.remove()"></figure>
+        </div>
+        <dl class="entry-body">
+          <div class="row"><dt>Symptom</dt><dd>The radio kept saying "armed", but the motors weren't doing anything.</dd></div>
+          <div class="row"><dt>Diagnosis</dt><dd>
+            <p>Instead of messing with random settings, I checked the arming flags with the CLI status command. Only CLI and MSP were set, which just come from being plugged into a computer over USB, so they're harmless. There was no RXLOSS or FAILSAFE, so the receiver link was completely fine.</p>
+            <span class="code">Arming disable flags: CLI MSP</span>
+          </dd></div>
+          <div class="row"><dt>Root cause</dt><dd>The problem was that the controller wasn't getting the arm command because my ARM switch range got messed up when I swapped radio modules.</dd></div>
+          <div class="row"><dt>Fix</dt><dd>I tweaked the ARM range in the Modes tab, and the motors finally started up.</dd></div>
+          <div class="row lesson"><dt>Lesson</dt><dd>Just because the radio says it's armed doesn't mean the drone agrees. You have to check the drone's actual flags.</dd></div>
+        </dl>
+      </article>
+
+      <article class="entry">
+        <div class="entry-side">
+          <div class="tag">Systematic elimination</div>
+          <h3>Motors screaming, no lift</h3>
+          <figure class="slot short"><span>[PHOTO OR CLIP FRAME: the no-lift attempt]</span><img src="assets/photos/log4_noLift.jpg" alt="The first flight attempt with propellers mounted upside down" loading="lazy" onerror="this.remove()"></figure>
+        </div>
+        <dl class="entry-body">
+          <div class="row"><dt>Symptom</dt><dd>On my very first try, the motors spun up at full speed but the drone just sat on the ground.</dd></div>
+          <div class="row"><dt>Diagnosis</dt><dd>Since the electronics and radio were working, it had to be a thrust issue. All four motors were failing the exact same way, which pointed straight to the propellers.</dd></div>
+          <div class="row"><dt>Root cause</dt><dd>Turns out, I had mounted all four propellers upside down.</div>
+          <div class="row"><dt>Fix</dt><dd>I flipped them over, double-checked the spin directions, and it took off.</dd></div>
+          <div class="row lesson"><dt>Lesson</dt><dd>Rule out what's working first, then find the common denominator. Checking prop direction is definitely on my checklist now.</dd></div>
+        </dl>
+      </article>
+
+      <article class="entry">
+        <div class="entry-side">
+          <div class="tag">Safety and resourcefulness</div>
+          <h3>A smoke stopper from a car bulb</h3>
+          <figure class="slot short"><span>[PHOTO: bulb in series with the battery lead]</span><img src="assets/photos/log5_bulb.jpg" alt="A 12 V car bulb wired in series with the battery lead" loading="lazy" onerror="this.remove()"></figure>
+        </div>
+        <dl class="entry-body">
+          <div class="row"><dt>Symptom</dt><dd>I was about to plug in the battery for the first time, but I didn't have a smoke stopper, and a short circuit would easily melt my wiring.</dd></div>
+          <div class="row"><dt>Diagnosis</dt><dd>I needed a way to limit the current just in case, and I didn't want to wait days for a tool to ship.</dd></div>
+          <div class="row"><dt>Root cause</dt><dd>It wasn't a failure, just a missing tool and a risk I didn't want to take.</dd></div>
+          <div class="row"><dt>Fix</dt><dd>So I wired a 12V car bulb in series with the battery. If there's a short, the bulb lights up and saves the board. I also ran a multimeter continuity test before connecting power.</dd></div>
+          <div class="row lesson"><dt>Lesson</dt><dd>Always make sure your first power-up is survivable before you actually do it.</dd></div>
+        </dl>
+      </article>
+
+    </div>
+
+    <div class="minor">
+      <div><div class="mono-label">Also fixed</div><h4>Charge-only USB cable</h4><p>Betaflight couldn't see the drone because I was using a charge-only cable. Swapping to a data cable fixed it instantly.</p></div>
+      <div><div class="mono-label">Also fixed</div><h4>CRSF missing from the firmware</h4><p>The factory firmware didn't support CRSF, so I reflashed it to 2026.6.1 with CRSF enabled.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="section specs" id="specs">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">Technical architecture</div>
+      <h2>Getting the radio to talk to the motors, one step at a time.</h2>
+      <p>Here's the control path as it is right now. The dashed boxes are all the Phase 3 features I have planned but haven't installed yet.</p>
+    </div>
+
+    <div class="chain-block">
+      <div class="chain-title built">Built · Phase 1 and 2</div>
+      <div class="chain">
+        <div class="node"><b>RadioMaster Pocket</b><span>CC2500 version, Internal RF off</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node"><b>Jumper Aion Nano</b><span>ELRS 2.4 GHz TX, external bay</span></div>
+        <div class="arrow" aria-hidden="true">→</div>
+        <div class="node"><b>HappyModel EP2</b><span>ELRS receiver</span></div>
+        <div class="arrow" aria-hidden="true">CRSF →</div>
+        <div class="node"><b>SpeedyBee F405 V5</b><span>Flight controller, UART6</span></div>
+        <div class="arrow" aria-hidden="true">DSHOT600 →</div>
+        <div class="node"><b>4-in-1 ESC, 55 A</b><span>Drives 4 motors</span></div>
+      </div>
+    </div>
+
+    <div class="chain-block">
+      <div class="chain-title planned">Planned · Phase 3</div>
+      <div class="chain">
+        <div class="node planned"><b>Beitian BN-880</b><span>GPS and compass, UART4 and I2C</span></div>
+        <div class="node planned"><b>SiK radio 915 MHz</b><span>Telemetry to the ground, UART2</span></div>
+        <div class="node planned"><b>Raspberry Pi Zero 2 W</b><span>Python, MAVLink over USB</span></div>
+        <div class="node planned"><b>ArduPilot firmware</b><span>Replaces Betaflight on the F405 V5</span></div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th>What I used</th></tr></thead>
+        <tbody>
+          <tr><td>Frame</td><td>Mark4 5″ carbon fiber, 5 mm arms, 16×16 mm motor mount</td></tr>
+          <tr><td>Motors</td><td>EMAX ECO II 2207 2400KV × 4</td></tr>
+          <tr><td>Flight controller / ESC</td><td>SpeedyBee F405 V5 stack, 55 A 4-in-1 ESC, 30.5 × 30.5 mm</td></tr>
+          <tr><td>Receiver</td><td>HappyModel EP2, ELRS 2.4 GHz</td></tr>
+          <tr><td>Radio</td><td>RadioMaster Pocket (CC2500) with external Jumper Aion ELRS Nano module</td></tr>
+          <tr><td>Propellers</td><td>HQProp 5×4.3×3 V1S</td></tr>
+          <tr><td>Battery</td><td>GNB 4S 1300 mAh LiPo, 120C, XT60</td></tr>
+          <tr><td>Firmware</td><td>Betaflight 2026.6.1, CRSF enabled, DSHOT600, motor idle 5.5%</td></tr>
+          <tr><td>Weight</td><td>About 650 g</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section next" id="next">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="label">What's next</div>
+      <h2>First, get comfortable flying it manually. Then, teach it to fly itself.</h2>
+    </div>
+    <div class="cards">
+      <div class="card now"><div class="mono-label hot">Phase 2 · now</div><h3>Tuning</h3><p>I still need to iron out some drift and oscillation, transition into Acro mode, tune the PIDs, and turn on bidirectional DShot with RPM filtering.</p></div>
+      <div class="card"><div class="mono-label">Phase 3 · planned</div><h3>Sensing and link</h3><p>Next up is mounting the GPS and compass away from the power wires, and adding 915 MHz telemetry so I can monitor it from my laptop.</p></div>
+      <div class="card"><div class="mono-label">Phase 3 · planned</div><h3>Autonomy</h3><p>Eventually, a Raspberry Pi will send MAVLink commands via Python to handle things like takeoff and waypoints, but I'll simulate all of that first.</p></div>
+      <div class="card"><div class="mono-label">Phase 3 · planned</div><h3>Failsafes</h3><p>I also need to set up a geofence and failsafes for low battery or signal loss before I even attempt autonomous flight.</p></div>
+    </div>
+    <p class="callout">Since true autonomy requires ArduPilot—which will wipe my Betaflight tune—I'm going to finish tuning and flying in Betaflight first before making the switch.</p>
+  </div>
+</section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap">
+    <div class="about">
+      <div class="big">MORPHEUS</div>
+      <p>A quadcopter designed, built and flown by Ernesto Guemez.</p>
+    </div>
+    <div class="col"><div class="mono-label">Code and notes</div><div><a href="https://github.com/ernestoguemez/morpheus-drone">github.com/ernestoguemez/morpheus-drone</a></div></div>
+    <div class="col"><div class="mono-label">Contact</div><div><a href="mailto:ernesto.guemeza@gmail.com">ernesto.guemeza@gmail.com</a></div></div>
+    <div class="col"><div class="mono-label">Full report</div><div><a href="morpheus-report.pdf">Engineering report (PDF)</a></div></div>
+    <p class="ai-note"><strong>AI Disclosure.</strong> I designed, built, debugged, and flew Morpheus myself. I used AI tools while building this website. All engineering work, decisions, and experiences documented here are my own.</p>
+  </div>
+</footer>
+
+<script>
+// Paste the YouTube video ID of the first-flight clip (the part after v= in the URL).
+// Leave empty to keep the placeholder.
+var FIRST_FLIGHT_ID = "";
+
+(function () {
+  if (!FIRST_FLIGHT_ID) return;
+  var box = document.getElementById("first-flight-video");
+  if (!box) return;
+  box.className = "video has-embed";
+  box.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed/' + encodeURIComponent(FIRST_FLIGHT_ID) +
+    '" title="Morpheus first flight" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+})();
+</script>
+</body>
+</html>
